@@ -55,7 +55,23 @@ def todo_create(request):
 @login_required
 def todo_update(request, pk):
     todo = get_object_or_404(Todo, pk=pk, user=request.user)
-    # ... (rest of the todo_update view remains the same)
+    if request.method == 'POST':
+        todo.title = request.POST.get('title')
+        due_date = request.POST.get('due_date') or None
+        if due_date and date.fromisoformat(due_date) < date.today():
+            messages.error(request, "Due date cannot be in the past. Please select a future date.")
+            return redirect('todo_list')
+        todo.due_date = due_date
+        todo.save()
+        messages.success(request, "Task updated successfully.")
+        return redirect('todo_list')
+    
+    # Only show the logged-in user's tasks
+    context = {
+        'todos': Todo.objects.filter(user=request.user).order_by('-created_at'),
+        'edit_todo': todo,
+    }
+    return render(request, 'todo_list.html', context)
 
 @login_required
 def todo_delete(request, pk):
