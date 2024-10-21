@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'css/favicon-32x32.png' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"><!-- Add Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="static/css/preview.png" alt="Logo">
+        </div>
+        <div class="name">To Do App</div>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+        <span class="welcome-message">Welcome, {{ user.username }}</span>
+        <a href="{% url 'logout' %}" class="auth-link logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    {% endif %}
+        </div>
+    </nav>
+
+    <section class="main-content">
+
+        <!-- Todo Section -->
+        <div class="todo-task">
+            <h2><i class="fas fa-tasks"></i> My To-Do List</h2>
+            <form class="todo-form" method="post" action="{% url 'todo_create' %}">
+                {% csrf_token %}
+                <input type="text" id="task-input" name="title" placeholder="Add new task..." required>
+                <input type="date" id="task-date" name="due_date">
+                <button type="submit">Add Task</button>
+            </form>
+            <hr> <!-- Divider -->
+            <form class="filter-sort-form" method="get" action="{% url 'todo_list' %}" class="filter-sort-form">
+                <label for="filter">Filter:</label>
+                <select id="filter" name="filter">
+                    <option value="all" {% if filter == 'all' %}selected{% endif %}>All</option>
+                    <option value="completed" {% if filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="incomplete" {% if filter == 'incomplete' %}selected{% endif %}>Pending</option>
+                </select>
+
+                <label for="sort">Sort by:</label>
+                <select id="sort" name="sort">
+                    <option value="due_date_asc" {% if sort == 'due_date_asc' %}selected{% endif %}>Due Date (Closest)</option>
+                    <option value="due_date_desc" {% if sort == 'due_date_desc' %}selected{% endif %}>Due Date (Furthest)</option>
+                    <option value="created_at_asc" {% if sort == 'created_at_asc' %}selected{% endif %}>Created Date (Oldest)</option>
+                    <option value="created_at_desc" {% if sort == 'created_at_desc' %}selected{% endif %}>Created Date (Newest)</option>
+                </select>
+
+                <button type="submit" class="apply-btn">Apply</button>
+            </form>
+            <!-- Table Section -->
+            <div class="todo-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th>Actions</th>
+                            <th>Date Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for todo in todos %}
+                        <tr>
+                            <td class="task-cell">{{ todo.title }}</td>
+                            <td>
+                                {% if todo.completed %}
+                                <span class="status-tag completed">Completed</span>
+                                {% else %}
+                                <span class="status-tag pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="small-text">{% if todo.due_date %}{{ todo.due_date|date:"d/m/Y" }}
+                                {% else %}N/A{% endif %}
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-container">
+                                    <div class="icon-group">
+                                        <a href="{% url 'todo_update' todo.id %}" class="edit-btn"  data-bs-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        <a href="#" onclick="showDeleteConfirmation({{ todo.id }})" class="delete-btn"  data-bs-toggle="tooltip" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
+                                    <form method="post" action="{% url 'todo_complete' todo.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn complete-btn">
+                                            {% if todo.completed %}Pending{% else %}Complete{% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td class="small-text">{{ todo.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Notification Section -->
+        <div class="notifications">
+            <h2 class="notification-title"><i class="fas fa-bell"></i> Notification(s)</h2>
+            {% if messages %}
+            <ul class="notification-message">
+                {% for message in messages %}
+                <li class="notification-card alert-{{ message.tags }}">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Edit Form Modal -->
+    {% if edit_todo %}
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2>Edit Task</h2>
+            <form method="post" action="{% url 'todo_update' edit_todo.id %}">
+                {% csrf_token %}
+                <div class="form-group" style="display: flex; align-items: center;">
+                    <input type="text" class="form-control task-input" name="title" value="{{ edit_todo.title }}" required>
+                    <input type="date" class="form-control task-date" name="due_date" value="{{ edit_todo.due_date|date:'Y-m-d' }}">
+                    <button type="submit" class="btn add-btn">Update Task</button>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <a href="{% url 'todo_list' %}" class="btn btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this task?</p>
+            <form id="delete-form" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn delete-btn">Yes</button>
+                <button type="button" class="btn btn-cancel" onclick="hideDeleteConfirmation()">No</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showDeleteConfirmation(todoId) {
+            document.getElementById('delete-modal').style.display = 'flex';
+            document.body.classList.add('blur');
+            document.getElementById('delete-form').action = '/delete/' + todoId + '/';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('delete-modal').style.display = 'none';
+            document.body.classList.remove('blur');
+        }
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    </script>
+</body>
+</html>

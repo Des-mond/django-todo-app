@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Todo App</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'css/favicon-32x32.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .register-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        .input-group i {
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            color: #aaa;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            width: 100%;
+            border: none;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button i {
+            margin-right: 10px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .login-link a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .error-messages {
+            margin-bottom: 1rem; /* Space below the error messages */
+            padding: 1rem;
+            background-color: #f8d7da; /* Light red background */
+            border: 1px solid #f5c6cb; /* Darker red border */
+            border-radius: 6px;
+            color: #721c24; /* Dark red text */
+            display: none; /* Hide by default */
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        .error-messages.visible {
+            display: block; /* Show if the class is added */
+        }
+        .error-message {
+            margin: 0.5rem 0; /* Add some space between messages */
+        }
+    </style>
+</head>
+<body>
+    <!-- Display all form errors at the top, only if they exist -->
+    <div class="error-messages {% if form.errors %}visible{% endif %}">
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="error-message">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <p class="error-message">{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div class="register-container">
+        <h1>Register</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    {{ form.username }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    {{ form.password1 }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Confirm Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    {{ form.password2 }}
+                </div>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div class="login-link">
+            <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+        </div>
+    </div>
+</body>
+</html>
